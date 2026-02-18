@@ -8,12 +8,13 @@
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .meltdown { filter: grayscale(100%) contrast(1.2); transition: all 1s; pointer-events: none; }
-        body { background-color: #0d1117; color: #e6edf3; }
-        .card { background-color: #161b22; border: 1px solid #30363d; }
+        body { background-color: #0d1117; color: #e6edf3; transition: filter 0.5s; }
+        .card { background-color: #161b22; border: 1px solid #30363d; transition: all 0.3s; }
+        .meltdown-active { filter: grayscale(100%) brightness(0.7); }
+        .meltdown-active .interactive-card { pointer-events: none; opacity: 0.5; }
+        #meltdown-btn { pointer-events: auto !important; position: relative; z-index: 9999; }
         .tab-active { background-color: #ef4444; color: white; font-weight: bold; }
         .tab-inactive { background-color: #30363d; color: #8b949e; }
-        /* 隐藏滚动条但保留功能 */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 10px; }
     </style>
@@ -26,28 +27,26 @@
             <div class="text-4xl font-black tracking-tighter text-red-500" id="total-points">0</div>
         </div>
         <div class="text-right">
+            <button onclick="toggleMeltdown()" id="meltdown-btn" class="text-[10px] border border-gray-600 text-gray-500 px-3 py-1 rounded-full hover:border-red-500 hover:text-red-500 transition-all mb-2">熔断模拟</button>
             <div class="text-xs text-green-400 font-mono" id="status">● 运行中</div>
         </div>
     </div>
 
     <div class="max-w-4xl mx-auto flex gap-2 mb-0 px-2">
-        <button onclick="changeView('time')" id="btn-time" class="text-xs px-4 py-2 rounded-t-lg tab-active">分时明细 (1D)</button>
-        <button onclick="changeView('day')" id="btn-day" class="text-xs px-4 py-2 rounded-t-lg tab-inactive">日线收盘 (Daily)</button>
+        <button onclick="changeView('time')" id="btn-time" class="text-xs px-4 py-2 rounded-t-lg tab-active">分时明细 (最近变动)</button>
+        <button onclick="changeView('day')" id="btn-day" class="text-xs px-4 py-2 rounded-t-lg tab-inactive">日线收盘 (历史趋势)</button>
     </div>
 
     <div class="max-w-4xl mx-auto card p-4 rounded-xl rounded-tl-none shadow-lg mb-6">
-        <div id="main-chart" style="width: 100%; height: 350px;"></div>
+        <div id="main-chart" style="width: 100%; height: 380px;"></div>
     </div>
 
     <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div class="card p-5 rounded-xl">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="font-bold text-gray-200">指令下达</h2>
-                <button onclick="document.getElementById('main-body').classList.toggle('meltdown')" class="text-[10px] text-gray-600">熔断模拟</button>
-            </div>
+        <div class="card p-5 rounded-xl interactive-card">
+            <h2 class="font-bold text-gray-200 mb-4">指令下达</h2>
             <div class="space-y-3">
                 <input id="point-input" type="number" placeholder="数额" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white outline-none focus:border-red-500">
-                <input id="reason-input" type="text" placeholder="加减分原因" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white outline-none focus:border-red-500">
+                <input id="reason-input" type="text" placeholder="原因说明" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white outline-none focus:border-red-500">
                 <select id="mood-input" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white outline-none">
                     <option value="🥰">不错👍</option>
                     <option value="😐">可以👍</option>
@@ -55,33 +54,33 @@
                     <option value="🔥">一边儿去💢</option>
                 </select>
                 <div class="flex gap-3">
-                    <button onclick="updatePoints(true)" class="flex-1 bg-red-600 hover:bg-red-700 py-3 rounded-lg font-black transition-transform active:scale-95">奖励 (Reward)</button>
-                    <button onclick="updatePoints(false)" class="flex-1 bg-green-600 hover:bg-green-700 py-3 rounded-lg font-black transition-transform active:scale-95">惩罚 (Penalty)</button>
+                    <button onclick="updatePoints(true)" class="flex-1 bg-red-600 hover:bg-red-700 py-3 rounded-lg font-black transition-transform active:scale-95 text-white">奖励 (Reward)</button>
+                    <button onclick="updatePoints(false)" class="flex-1 bg-green-600 hover:bg-green-700 py-3 rounded-lg font-black transition-transform active:scale-95 text-white">惩罚 (Penalty)</button>
                 </div>
             </div>
         </div>
 
-        <div class="card p-5 rounded-xl">
-            <h2 class="font-bold text-blue-400 mb-4 text-lg">奖品架</h2>
+        <div class="card p-5 rounded-xl interactive-card">
+            <h2 class="font-bold text-blue-400 mb-4 text-lg text-white font-black">奖品架</h2>
             <div class="space-y-3">
                 <input id="award-name" type="text" placeholder="奖品名称" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white outline-none">
                 <input id="award-cost" type="number" placeholder="所需积分" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white outline-none">
-                <button onclick="addAward()" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-black transition-transform active:scale-95">上架新奖品</button>
+                <button onclick="addAward()" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-black transition-transform active:scale-95 text-white">上架新奖品</button>
             </div>
         </div>
     </div>
 
-    <div class="max-w-4xl mx-auto mb-10">
-        <h2 class="text-xl font-bold mb-4 flex items-center gap-3 text-purple-400">
+    <div class="max-w-4xl mx-auto mb-10 interactive-card">
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-3 text-purple-400 font-black">
             <span class="w-1 h-6 bg-purple-500"></span> 交易流水明细
         </h2>
-        <div class="card rounded-xl overflow-hidden">
-            <table class="w-full text-left text-sm">
+        <div class="card rounded-xl overflow-hidden overflow-x-auto">
+            <table class="w-full text-left text-sm min-w-[500px]">
                 <thead class="bg-gray-800/50 text-gray-400">
                     <tr>
                         <th class="p-3">成交时间</th>
                         <th class="p-3">变动</th>
-                        <th class="p-3">交易说明</th>
+                        <th class="p-3">说明</th>
                         <th class="p-3 text-center">情绪</th>
                     </tr>
                 </thead>
@@ -90,15 +89,14 @@
         </div>
     </div>
 
-    <div class="max-w-4xl mx-auto mb-20">
-        <h2 class="text-xl font-bold mb-4 flex items-center gap-3 text-yellow-500">
-            <span class="w-1 h-6 bg-yellow-500"></span> 奖品交易
+    <div class="max-w-4xl mx-auto mb-20 interactive-card">
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-3 text-yellow-500 font-black">
+            <span class="w-1 h-6 bg-yellow-500"></span> 奖品交易区
         </h2>
         <div id="awards-list" class="grid grid-cols-2 sm:grid-cols-3 gap-4"></div>
     </div>
 
     <script>
-        // --- 请确保这里的凭证正确 ---
         const SUPABASE_URL = 'https://usjzwuxdjqbradiypcyb.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVzanp3dXhkanFicmFkaXlwY3liIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4Nzk4MTgsImV4cCI6MjA4NjQ1NTgxOH0.JGt1KdhxvMFWjZPL_pOdjvlKg1YfpAud7LCvxptcQuM';
 
@@ -114,10 +112,7 @@
 
         async function fetchHistory() {
             const { data } = await db.from('points_history').select('*').order('created_at', { ascending: true });
-            if (data) {
-                rawData = data;
-                updateUI();
-            }
+            if (data) { rawData = data; updateUI(); }
         }
 
         function updateUI() {
@@ -138,49 +133,89 @@
         function renderChart() {
             let displayData = [];
             if (currentView === 'time') {
-                displayData = rawData;
+                // 优化点1：分时图显示所有点，但默认开启滑动缩放，或者你可以截取最近30个点
+                displayData = rawData; 
             } else {
                 const groups = {};
                 rawData.forEach(d => {
                     const date = new Date(d.created_at).toLocaleDateString();
-                    groups[date] = d; // 取当天最后一条
+                    groups[date] = d; 
                 });
                 displayData = Object.values(groups);
             }
 
             const option = {
                 backgroundColor: 'transparent',
-                tooltip: { trigger: 'axis' },
+                tooltip: { 
+                    trigger: 'axis',
+                    formatter: function (params) {
+                        let relVal = params[0].name;
+                        relVal += '<br/>积分: ' + params[0].value;
+                        return relVal;
+                    }
+                },
+                // 优化点2：引入 DataZoom 缩放条
+                dataZoom: [{
+                    type: 'inside', // 允许手指/鼠标滚轮缩放
+                    start: displayData.length > 15 ? 100 - (15 / displayData.length * 100) : 0, // 默认显示最后15个点
+                    end: 100
+                }, {
+                    type: 'slider', // 底部显示滑动条
+                    height: 20,
+                    bottom: 10,
+                    borderColor: 'transparent',
+                    fillerColor: 'rgba(239, 68, 68, 0.2)',
+                    handleStyle: { color: '#ef4444' }
+                }],
+                grid: { top: '10%', left: '10%', right: '5%', bottom: '20%' },
                 xAxis: { 
                     type: 'category', 
                     data: displayData.map(d => {
                         const dt = new Date(d.created_at);
-                        return currentView === 'time' ? `${dt.getHours()}:${dt.getMinutes().toString().padStart(2, '0')}` : `${dt.getMonth()+1}/${dt.getDate()}`;
-                    })
+                        const isToday = dt.toDateString() === new Date().toDateString();
+                        // 优化点3：如果不是今天的点，在分时图里也显示日期
+                        if (currentView === 'time') {
+                            return isToday ? 
+                                `${dt.getHours()}:${dt.getMinutes().toString().padStart(2, '0')}` : 
+                                `${dt.getMonth()+1}/${dt.getDate()} ${dt.getHours()}:${dt.getMinutes().toString().padStart(2, '0')}`;
+                        }
+                        return `${dt.getMonth()+1}/${dt.getDate()}`;
+                    }),
+                    axisLabel: { color: '#8b949e', fontSize: 10 }
                 },
-                yAxis: { type: 'value', splitLine: { lineStyle: { color: '#30363d' } } },
+                yAxis: { 
+                    type: 'value', 
+                    splitLine: { lineStyle: { color: '#30363d' } },
+                    axisLabel: { color: '#8b949e' }
+                },
                 series: [{
                     data: displayData.map(d => d.value),
                     type: currentView === 'time' ? 'line' : 'bar',
                     smooth: true,
+                    symbol: 'circle',
+                    symbolSize: 6,
                     itemStyle: { color: currentView === 'time' ? '#ef4444' : '#3b82f6' },
-                    areaStyle: currentView === 'time' ? { color: 'rgba(239, 68, 68, 0.1)' } : null
+                    areaStyle: currentView === 'time' ? {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(239, 68, 68, 0.5)' },
+                            { offset: 1, color: 'rgba(239, 68, 68, 0)' }
+                        ])
+                    } : null
                 }]
             };
             chart.setOption(option, true);
         }
 
         function renderTable() {
-            const list = [...rawData].reverse().slice(0, 15); // 显示最近15笔
-            document.getElementById('history-table-body').innerHTML = list.map((item, idx) => {
+            const list = [...rawData].reverse().slice(0, 15);
+            document.getElementById('history-table-body').innerHTML = list.map((item) => {
                 const originalIdx = rawData.findIndex(r => r.id === item.id);
                 const diff = originalIdx > 0 ? item.value - rawData[originalIdx - 1].value : item.value;
-                const diffClass = diff >= 0 ? 'text-red-500' : 'text-green-500';
                 return `
                     <tr class="border-t border-gray-800">
-                        <td class="p-3 text-gray-500 text-xs">${new Date(item.created_at).toLocaleString()}</td>
-                        <td class="p-3 font-bold ${diffClass}">${diff > 0 ? '+' : ''}${diff}</td>
-                        <td class="p-3 text-gray-300">${item.reason}</td>
+                        <td class="p-3 text-gray-500 text-xs">${new Date(item.created_at).toLocaleString([], {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'})}</td>
+                        <td class="p-3 font-bold ${diff >= 0 ? 'text-red-500' : 'text-green-500'}">${diff > 0 ? '+' : ''}${diff}</td>
+                        <td class="p-3 text-gray-300 text-xs">${item.reason}</td>
                         <td class="p-3 text-center">${item.mood}</td>
                     </tr>
                 `;
@@ -188,8 +223,10 @@
         }
 
         async function updatePoints(isAdd) {
-            const val = parseInt(document.getElementById('point-input').value);
-            const reason = document.getElementById('reason-input').value || '无备注记录';
+            const valBox = document.getElementById('point-input');
+            const reasonBox = document.getElementById('reason-input');
+            const val = parseInt(valBox.value);
+            const reason = reasonBox.value || '日常记录';
             const mood = document.getElementById('mood-input').value;
             if (isNaN(val)) return alert('请输入数额');
             
@@ -197,18 +234,23 @@
             const newVal = isAdd ? current + val : current - val;
             
             await db.from('points_history').insert([{ value: newVal, reason, mood }]);
+            valBox.value = ''; reasonBox.value = '';
             fetchHistory();
         }
 
-        // --- 奖品逻辑 ---
         async function fetchAwards() {
             const { data } = await db.from('awards').select('*').order('cost', { ascending: true });
             if (data) {
                 document.getElementById('awards-list').innerHTML = data.map(a => `
-                    <div class="card p-4 rounded-xl text-center">
-                        <div class="text-2xl font-black text-yellow-500 mb-1">${a.cost}</div>
-                        <div class="text-sm text-gray-300 mb-4">${a.name}</div>
-                        <button onclick="redeem('${a.name}', ${a.cost})" class="w-full bg-gray-700 hover:bg-yellow-600 py-2 rounded-lg text-xs transition-colors">兑换</button>
+                    <div class="card p-4 rounded-xl text-center flex flex-col justify-between border-b-2 border-b-yellow-900">
+                        <div>
+                            <div class="text-2xl font-black text-yellow-500 mb-1">${a.cost}</div>
+                            <div class="text-sm text-gray-300 mb-4">${a.name}</div>
+                        </div>
+                        <div class="space-y-2">
+                            <button onclick="redeem('${a.name}', ${a.cost})" class="w-full bg-yellow-600/20 hover:bg-yellow-600 border border-yellow-600 py-2 rounded-lg text-xs transition-colors text-yellow-500 hover:text-white">兑换</button>
+                            <button onclick="deleteAward(${a.id})" class="text-[10px] text-gray-600 hover:text-red-500 block w-full text-center">下架</button>
+                        </div>
                     </div>
                 `).join('');
             }
@@ -219,17 +261,33 @@
             const cost = parseInt(document.getElementById('award-cost').value);
             if (name && cost) {
                 await db.from('awards').insert([{ name, cost }]);
+                document.getElementById('award-name').value = '';
+                document.getElementById('award-cost').value = '';
+                fetchAwards();
+            }
+        }
+
+        async function deleteAward(id) {
+            if (confirm('确定要下架这个奖品吗？')) {
+                await db.from('awards').delete().eq('id', id);
                 fetchAwards();
             }
         }
 
         async function redeem(name, cost) {
-            const current = rawData[rawData.length - 1].value;
-            if (current < cost) return alert('点数不足！');
-            if (confirm(`确定消耗 ${cost} 点兑换 ${name}？`)) {
-                await db.from('points_history').insert([{ value: current - cost, reason: `兑换: ${name}`, mood: '🎁' }]);
+            const current = rawData.length > 0 ? rawData[rawData.length - 1].value : 0;
+            if (current < cost) return alert('余额不足，再接再厉！');
+            if (confirm(`确定花费 ${cost} 分兑换 [${name}] 吗？`)) {
+                await db.from('points_history').insert([{ value: current - cost, reason: `兑换奖品: ${name}`, mood: '🎁' }]);
                 fetchHistory();
             }
+        }
+
+        function toggleMeltdown() {
+            const body = document.getElementById('main-body');
+            const btn = document.getElementById('meltdown-btn');
+            const isActive = body.classList.toggle('meltdown-active');
+            btn.innerText = isActive ? "解除熔断" : "熔断模拟";
         }
 
         init();
