@@ -33,18 +33,18 @@
     </div>
 
     <div class="max-w-4xl mx-auto flex gap-2 mb-0 px-2">
-        <button onclick="changeView('time')" id="btn-time" class="text-xs px-4 py-2 rounded-t-lg tab-active">分时明细</button>
-        <button onclick="changeView('day')" id="btn-day" class="text-xs px-4 py-2 rounded-t-lg tab-inactive">日线收盘</button>
+        <button onclick="changeView('time')" id="btn-time" class="text-xs px-4 py-2 rounded-t-lg tab-active">分时</button>
+        <button onclick="changeView('day')" id="btn-day" class="text-xs px-4 py-2 rounded-t-lg tab-inactive">日线</button>
     </div>
 
     <div class="max-w-4xl mx-auto card p-4 rounded-xl rounded-tl-none shadow-lg mb-6">
         <div id="main-chart" style="width: 100%; height: 380px;"></div>
     </div>
 
-    <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div class="card p-5 rounded-xl interactive-card">
+    <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 items-stretch">
+        <div class="card p-5 rounded-xl interactive-card flex flex-col">
             <h2 class="font-bold text-gray-200 mb-4">指令下达</h2>
-            <div class="space-y-3">
+            <div class="space-y-3 flex-grow">
                 <input id="point-input" type="number" placeholder="数额" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white outline-none focus:border-red-500">
                 <input id="reason-input" type="text" placeholder="原因说明" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white outline-none focus:border-red-500">
                 <select id="mood-input" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white outline-none">
@@ -53,35 +53,45 @@
                     <option value="😒">无语😓</option>
                     <option value="🔥">一边儿去💢</option>
                 </select>
-                <div class="flex gap-3">
-                    <button onclick="updatePoints(true)" class="flex-1 bg-red-600 hover:bg-red-700 py-3 rounded-lg font-black transition-transform active:scale-95 text-white">奖励 (Reward)</button>
-                    <button onclick="updatePoints(false)" class="flex-1 bg-green-600 hover:bg-green-700 py-3 rounded-lg font-black transition-transform active:scale-95 text-white">惩罚 (Penalty)</button>
+                <div class="flex gap-3 pt-1">
+                    <button onclick="updatePoints(true)" class="flex-1 bg-red-600 hover:bg-red-700 py-3 rounded-lg font-black text-white transition-all active:scale-95">奖励</button>
+                    <button onclick="updatePoints(false)" class="flex-1 bg-green-600 hover:bg-green-700 py-3 rounded-lg font-black text-white transition-all active:scale-95">惩罚</button>
                 </div>
             </div>
         </div>
 
-        <div class="card p-5 rounded-xl interactive-card">
-            <h2 class="font-bold text-blue-400 mb-4 text-lg text-white font-black">奖品架</h2>
-            <div class="space-y-3">
+        <div class="card p-5 rounded-xl interactive-card flex flex-col">
+            <h2 class="font-bold text-blue-400 mb-4 text-lg text-white">奖品架</h2>
+            <div class="space-y-3 flex-grow flex flex-col">
                 <input id="award-name" type="text" placeholder="奖品名称" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white outline-none">
                 <input id="award-cost" type="number" placeholder="所需积分" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white outline-none">
-                <button onclick="addAward()" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-black transition-transform active:scale-95 text-white">上架新奖品</button>
+                <div class="hidden md:block h-[54px]"></div> 
+                <div class="mt-auto pt-1">
+                    <button onclick="addAward()" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-black text-white transition-all active:scale-95">上架新奖品</button>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="max-w-4xl mx-auto mb-10 interactive-card">
-        <h2 class="text-xl font-bold mb-4 flex items-center gap-3 text-purple-400 font-black">
-            <span class="w-1 h-6 bg-purple-500"></span> 交易流水明细
-        </h2>
+        <div class="flex justify-between items-center mb-4 px-2">
+            <h2 class="text-xl font-bold flex items-center gap-3 text-purple-400 font-black">
+                <span class="w-1 h-6 bg-purple-500"></span> 积分流水明细
+            </h2>
+            <div class="flex items-center gap-3 bg-gray-800 px-3 py-1 rounded-lg border border-gray-700">
+                <button onclick="prevPage()" class="text-xs text-gray-400 hover:text-white disabled:opacity-20" id="prev-btn">◀</button>
+                <span id="page-info" class="text-[10px] font-mono text-purple-300">Page 1</span>
+                <button onclick="nextPage()" class="text-xs text-gray-400 hover:text-white disabled:opacity-20" id="next-btn">▶</button>
+            </div>
+        </div>
         <div class="card rounded-xl overflow-hidden overflow-x-auto">
             <table class="w-full text-left text-sm min-w-[500px]">
                 <thead class="bg-gray-800/50 text-gray-400">
                     <tr>
-                        <th class="p-3">成交时间</th>
-                        <th class="p-3">变动</th>
-                        <th class="p-3">说明</th>
-                        <th class="p-3 text-center">情绪</th>
+                        <th class="p-3 font-bold">时间</th>
+                        <th class="p-3 font-bold">变动</th>
+                        <th class="p-3 font-bold">说明</th>
+                        <th class="p-3 text-center font-bold">情绪</th>
                     </tr>
                 </thead>
                 <tbody id="history-table-body"></tbody>
@@ -91,7 +101,7 @@
 
     <div class="max-w-4xl mx-auto mb-20 interactive-card">
         <h2 class="text-xl font-bold mb-4 flex items-center gap-3 text-yellow-500 font-black">
-            <span class="w-1 h-6 bg-yellow-500"></span> 奖品交易区
+            <span class="w-1 h-6 bg-yellow-500"></span> 奖品交易
         </h2>
         <div id="awards-list" class="grid grid-cols-2 sm:grid-cols-3 gap-4"></div>
     </div>
@@ -102,8 +112,11 @@
 
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         const chart = echarts.init(document.getElementById('main-chart'), 'dark');
+        
         let rawData = [];
         let currentView = 'time';
+        let currentPage = 1;
+        const pageSize = 10;
 
         async function init() {
             await fetchHistory();
@@ -133,7 +146,6 @@
         function renderChart() {
             let displayData = [];
             if (currentView === 'time') {
-                // 优化点1：分时图显示所有点，但默认开启滑动缩放，或者你可以截取最近30个点
                 displayData = rawData; 
             } else {
                 const groups = {};
@@ -146,69 +158,62 @@
 
             const option = {
                 backgroundColor: 'transparent',
-                tooltip: { 
-                    trigger: 'axis',
-                    formatter: function (params) {
-                        let relVal = params[0].name;
-                        relVal += '<br/>积分: ' + params[0].value;
-                        return relVal;
-                    }
-                },
-                // 优化点2：引入 DataZoom 缩放条
+                tooltip: { trigger: 'axis' },
                 dataZoom: [{
-                    type: 'inside', // 允许手指/鼠标滚轮缩放
-                    start: displayData.length > 15 ? 100 - (15 / displayData.length * 100) : 0, // 默认显示最后15个点
+                    type: 'inside',
+                    start: displayData.length > 15 ? 100 - (15 / displayData.length * 100) : 0,
                     end: 100
                 }, {
-                    type: 'slider', // 底部显示滑动条
-                    height: 20,
+                    type: 'slider',
+                    height: 15,
                     bottom: 10,
                     borderColor: 'transparent',
                     fillerColor: 'rgba(239, 68, 68, 0.2)',
                     handleStyle: { color: '#ef4444' }
                 }],
-                grid: { top: '10%', left: '10%', right: '5%', bottom: '20%' },
+                grid: { top: '10%', left: '8%', right: '5%', bottom: '20%' },
                 xAxis: { 
                     type: 'category', 
                     data: displayData.map(d => {
                         const dt = new Date(d.created_at);
-                        const isToday = dt.toDateString() === new Date().toDateString();
-                        // 优化点3：如果不是今天的点，在分时图里也显示日期
+                        const today = new Date();
+                        const isToday = dt.toDateString() === today.toDateString();
+
                         if (currentView === 'time') {
+                            // 优化：跨天显示日期，当天仅显示时间
                             return isToday ? 
                                 `${dt.getHours()}:${dt.getMinutes().toString().padStart(2, '0')}` : 
                                 `${dt.getMonth()+1}/${dt.getDate()} ${dt.getHours()}:${dt.getMinutes().toString().padStart(2, '0')}`;
                         }
                         return `${dt.getMonth()+1}/${dt.getDate()}`;
                     }),
-                    axisLabel: { color: '#8b949e', fontSize: 10 }
+                    axisLabel: { color: '#8b949e', fontSize: 10, hideOverlap: true }
                 },
-                yAxis: { 
-                    type: 'value', 
-                    splitLine: { lineStyle: { color: '#30363d' } },
-                    axisLabel: { color: '#8b949e' }
-                },
+                yAxis: { type: 'value', splitLine: { lineStyle: { color: '#30363d' } } },
                 series: [{
                     data: displayData.map(d => d.value),
                     type: currentView === 'time' ? 'line' : 'bar',
                     smooth: true,
-                    symbol: 'circle',
-                    symbolSize: 6,
                     itemStyle: { color: currentView === 'time' ? '#ef4444' : '#3b82f6' },
-                    areaStyle: currentView === 'time' ? {
-                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                            { offset: 0, color: 'rgba(239, 68, 68, 0.5)' },
-                            { offset: 1, color: 'rgba(239, 68, 68, 0)' }
-                        ])
-                    } : null
+                    areaStyle: currentView === 'time' ? { color: 'rgba(239, 68, 68, 0.1)' } : null
                 }]
             };
             chart.setOption(option, true);
         }
 
         function renderTable() {
-            const list = [...rawData].reverse().slice(0, 15);
-            document.getElementById('history-table-body').innerHTML = list.map((item) => {
+            const totalPages = Math.ceil(rawData.length / pageSize) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+            
+            const reversedData = [...rawData].reverse();
+            const startIdx = (currentPage - 1) * pageSize;
+            const pageData = reversedData.slice(startIdx, startIdx + pageSize);
+
+            document.getElementById('page-info').innerText = `Page ${currentPage} / ${totalPages}`;
+            document.getElementById('prev-btn').disabled = currentPage === 1;
+            document.getElementById('next-btn').disabled = currentPage === totalPages;
+
+            document.getElementById('history-table-body').innerHTML = pageData.map((item) => {
                 const originalIdx = rawData.findIndex(r => r.id === item.id);
                 const diff = originalIdx > 0 ? item.value - rawData[originalIdx - 1].value : item.value;
                 return `
@@ -222,19 +227,22 @@
             }).join('');
         }
 
+        function prevPage() { if (currentPage > 1) { currentPage--; renderTable(); } }
+        function nextPage() { if (currentPage < Math.ceil(rawData.length / pageSize)) { currentPage++; renderTable(); } }
+
         async function updatePoints(isAdd) {
-            const valBox = document.getElementById('point-input');
-            const reasonBox = document.getElementById('reason-input');
-            const val = parseInt(valBox.value);
-            const reason = reasonBox.value || '日常记录';
-            const mood = document.getElementById('mood-input').value;
+            const val = parseInt(document.getElementById('point-input').value);
             if (isNaN(val)) return alert('请输入数额');
-            
             const current = rawData.length > 0 ? rawData[rawData.length - 1].value : 0;
             const newVal = isAdd ? current + val : current - val;
-            
-            await db.from('points_history').insert([{ value: newVal, reason, mood }]);
-            valBox.value = ''; reasonBox.value = '';
+            await db.from('points_history').insert([{ 
+                value: newVal, 
+                reason: document.getElementById('reason-input').value || '常规记录', 
+                mood: document.getElementById('mood-input').value 
+            }]);
+            document.getElementById('point-input').value = '';
+            document.getElementById('reason-input').value = '';
+            currentPage = 1;
             fetchHistory();
         }
 
@@ -242,14 +250,14 @@
             const { data } = await db.from('awards').select('*').order('cost', { ascending: true });
             if (data) {
                 document.getElementById('awards-list').innerHTML = data.map(a => `
-                    <div class="card p-4 rounded-xl text-center flex flex-col justify-between border-b-2 border-b-yellow-900">
+                    <div class="card p-4 rounded-xl text-center flex flex-col justify-between border-b-2 border-b-yellow-600">
                         <div>
                             <div class="text-2xl font-black text-yellow-500 mb-1">${a.cost}</div>
                             <div class="text-sm text-gray-300 mb-4">${a.name}</div>
                         </div>
                         <div class="space-y-2">
-                            <button onclick="redeem('${a.name}', ${a.cost})" class="w-full bg-yellow-600/20 hover:bg-yellow-600 border border-yellow-600 py-2 rounded-lg text-xs transition-colors text-yellow-500 hover:text-white">兑换</button>
-                            <button onclick="deleteAward(${a.id})" class="text-[10px] text-gray-600 hover:text-red-500 block w-full text-center">下架</button>
+                            <button onclick="redeem('${a.name}', ${a.cost})" class="w-full bg-yellow-600/10 hover:bg-yellow-600 border border-yellow-600/50 py-2 rounded-lg text-xs transition-all active:scale-95">兑换</button>
+                            <button onclick="deleteAward(${a.id})" class="text-[10px] text-gray-600 hover:text-red-500 block w-full">下架奖品</button>
                         </div>
                     </div>
                 `).join('');
@@ -268,26 +276,22 @@
         }
 
         async function deleteAward(id) {
-            if (confirm('确定要下架这个奖品吗？')) {
-                await db.from('awards').delete().eq('id', id);
-                fetchAwards();
-            }
+            if (confirm('确定下架？')) { await db.from('awards').delete().eq('id', id); fetchAwards(); }
         }
 
         async function redeem(name, cost) {
             const current = rawData.length > 0 ? rawData[rawData.length - 1].value : 0;
-            if (current < cost) return alert('余额不足，再接再厉！');
-            if (confirm(`确定花费 ${cost} 分兑换 [${name}] 吗？`)) {
+            if (current < cost) return alert('这么点积分也想换？');
+            if (confirm(`确定花费 ${cost} 兑换 [${name}]？`)) {
                 await db.from('points_history').insert([{ value: current - cost, reason: `兑换奖品: ${name}`, mood: '🎁' }]);
+                currentPage = 1;
                 fetchHistory();
             }
         }
 
         function toggleMeltdown() {
-            const body = document.getElementById('main-body');
-            const btn = document.getElementById('meltdown-btn');
-            const isActive = body.classList.toggle('meltdown-active');
-            btn.innerText = isActive ? "解除熔断" : "熔断模拟";
+            const isActive = document.getElementById('main-body').classList.toggle('meltdown-active');
+            document.getElementById('meltdown-btn').innerText = isActive ? "解除熔断" : "熔断模拟";
         }
 
         init();
